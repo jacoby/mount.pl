@@ -38,33 +38,34 @@ my @unmount ;
 my $unmount ;
 my $verbose ;
 
-$mountprog{sshfs}   = '/usr/bin/sshfs' ;
+$mountprog{ sshfs } = '/usr/bin/sshfs' ;
 my $unmountprog = '/bin/fusermount' ;
 
-GetOptions( 'mount=s'   => \@mount,
-            'unmount=s' => \@unmount,
-            'quit'      => \$unmount,
-            'verbose'   => \$verbose,
-             ) ;
-
+GetOptions(
+    'mount=s'   => \@mount,
+    'unmount=s' => \@unmount,
+    'quit'      => \$unmount,
+    'verbose'   => \$verbose,
+    ) ;
 
 # don't like the full hardcode
-open DATA , '<' , '/home/jacoby/.mount.conf' or croak $! ;
-while ( <DATA> ) {
+open my $DATA, '<', '/home/jacoby/.mount.conf' or croak $! ;
+while ( <$DATA> ) {
     chomp ;
     my $line = $_ ;
     next if $line !~ m{\w}mx ;
     my $result = ( split m{\#}mx, $line )[ 0 ] ;
     $line = $result ;
     next if $line !~ m{\w}mx ;
-    my ( $name, $flag , $protocol , $remote, $local ) = split m{\s*\|\s*}mx, $line ;
+    my ( $name, $flag, $protocol, $remote, $local ) = split m{\s*\|\s*}mx,
+        $line ;
     $name =~ s{\s}{}g ;
-    $local{ $name }  = $local ;
-    $remote{ $name } = $remote ;
-    $protocol{ $name }  = $protocol ;
-    $flag{ $name } = length $flag ;
+    $local{ $name }    = $local ;
+    $remote{ $name }   = $remote ;
+    $protocol{ $name } = $protocol ;
+    $flag{ $name }     = length $flag ;
     }
-
+close $DATA ;
 
 # UNMOUNT EVERYTHING
 if ( $unmount ) {
@@ -83,6 +84,7 @@ elsif ( ( $#mount == -1 ) && ( $#unmount == -1 ) ) {
 
 # MIXED MOUNTS AND UNMOUNTS
 else {
+
     # mounts first
     for my $mount ( @mount ) {
         mount $mount , $remote{ $mount }, $local{ $mount } ;
@@ -104,10 +106,15 @@ sub mount {
     $verbose and say { interactive } $remote ;
     $verbose and say { interactive } $local ;
 
-    return 0 if $name !~ /\w/mx ;   $verbose and say { interactive } 'Pass' ;
-    return 0 if $remote !~ /\w/mx ; $verbose and say { interactive } 'Pass' ;
-    return 0 if $local !~ /\w/mx ;  $verbose and say { interactive } 'Pass' ;
-    return 0 if !-d $local ;        $verbose and say { interactive } 'Pass' ;
+    return 0 if $name !~ /\w/mx ;
+    $verbose and say { interactive } 'Pass' ;
+    return 0 if $remote !~ /\w/mx ;
+    $verbose and say { interactive } 'Pass' ;
+    return 0 if $local !~ /\w/mx ;
+    $verbose and say { interactive } 'Pass' ;
+    return 0 if !-d $local ;
+    $verbose and say { interactive } 'Pass' ;
+
     #should mkdir $local here
     say 'Mounting ' . $name ;
     print qx( /usr/bin/sshfs -o workaround=rename $remote $local ) ;
@@ -117,9 +124,12 @@ sub mount {
 sub unmount {
     my $name  = shift ;
     my $local = shift ;
-    return 0 if $name !~ /\w/mx ;  $verbose and say { interactive } 'Pass' ;
-    return 0 if $local !~ /\w/mx ; $verbose and say { interactive } 'Pass' ;
-    return 0 if !-d $local ;       $verbose and say { interactive } 'Pass' ;
+    return 0 if $name !~ /\w/mx ;
+    $verbose and say { interactive } 'Pass' ;
+    return 0 if $local !~ /\w/mx ;
+    $verbose and say { interactive } 'Pass' ;
+    return 0 if !-d $local ;
+    $verbose and say { interactive } 'Pass' ;
     say 'Unmounting ' . $name ;
     say qx( /bin/fusermount -u $local ) ;
     return 1 ;
