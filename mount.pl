@@ -12,11 +12,13 @@
 
 # 2011/11 - DAJ - Added -o workaround=rename to allow GIT over
 # sshfs
+# 2012/02 - DAJ - Added groups for mounting and dismounting
 
 use 5.010 ;
 use strict ;
 use warnings ;
 use Carp ;
+use Data::Dumper ;
 use Getopt::Long ;
 use IO::Interactive qw{ interactive } ;
 use subs qw( mount unmount ) ;
@@ -33,19 +35,24 @@ my %local ;
 my @mount ;
 my %mountprog ;
 my %protocol ;
+my $groups ;
 my %remote ;
 my @unmount ;
 my $unmount ;
 my $verbose ;
+my @group_mount ;
+my @group_unmount ;
 
 $mountprog{ sshfs } = '/usr/bin/sshfs' ;
 my $unmountprog = '/bin/fusermount' ;
 
 GetOptions(
-    'mount=s'   => \@mount,
-    'unmount=s' => \@unmount,
-    'quit'      => \$unmount,
-    'verbose'   => \$verbose,
+    'mount=s'    => \@mount,
+    'unmount=s'  => \@unmount,
+    'group=s'    => \@group_mount ,
+    'dismount=s' => \@group_unmount ,
+    'quit'       => \$unmount,
+    'verbose'    => \$verbose,
     ) ;
 
 # don't like the full hardcode
@@ -57,9 +64,10 @@ while ( <$DATA> ) {
     my $result = ( split m{\#}mx, $line )[ 0 ] ;
     $line = $result ;
     next if $line !~ m{\w}mx ;
-    my ( $name, $flag, $protocol, $remote, $local ) = split m{\s*\|\s*}mx,
+    my ( $name, $group , $flag, $protocol, $remote, $local ) = split m{\s*\|\s*}mx,
         $line ;
     $name =~ s{\s}{}g ;
+    push @{ $groups->{ $group } } , $name ;
     $local{ $name }    = $local ;
     $remote{ $name }   = $remote ;
     $protocol{ $name } = $protocol ;
@@ -75,7 +83,11 @@ if ( $unmount ) {
     }
 
 # MOUNT EVERYTHING
-elsif ( ( $#mount == -1 ) && ( $#unmount == -1 ) ) {
+elsif ( ( $#mount == -1 ) &&
+        ( $#unmount == -1 ) &&
+        ( $#group_mount == -1 ) &&
+        ( $#group_unmount == -1 )
+        ) {
     for my $mount ( sort { lc $a cmp lc $b } keys %local ) {
         next unless $flag{ $mount } ;
         mount $mount , $remote{ $mount }, $local{ $mount } ;
@@ -85,14 +97,28 @@ elsif ( ( $#mount == -1 ) && ( $#unmount == -1 ) ) {
 # MIXED MOUNTS AND UNMOUNTS
 else {
 
-    # mounts first
-    for my $mount ( @mount ) {
-        mount $mount , $remote{ $mount }, $local{ $mount } ;
+    # groups then individuals
+    # unmounts first
+    for my $group ( @group_unmount ) {
+        for my $mount ( @{ $groups->{ $group } } ) {
+            unmount $mount , $local{ $mount } ;
+            }
         }
 
-    # then unmounts
     for my $mount ( @unmount ) {
         unmount $mount , $local{ $mount } ;
+        }
+
+    # then mounts
+    for my $group ( @group_unmount ) {
+        for my $mount ( @{ $groups->{ $group } } ) {
+            next unless $flag{ $mount } ;
+            mount $mount , $remote{ $mount }, $local{ $mount } ;
+            }
+        }
+
+    for my $mount ( @mount ) {
+        mount $mount , $remote{ $mount }, $local{ $mount } ;
         }
     }
 

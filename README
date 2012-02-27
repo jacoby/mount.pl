@@ -18,17 +18,32 @@ Configuration is held in ~/.mount.conf, which looks like this :
 ### .mount.conf
 # like many config files, hashes comment out
 
-Machine1    |M|sshfs|machine1.long.url:   | /home/me/Machine1
-Machine2    | |sshfs|machine2.long.url:   | /home/me/Machine2
+Machine1    |G|M|sshfs|machine1.long.url:   | /home/me/Machine1
+Machine2    |G| |sshfs|machine2.long.url:   | /home/me/Machine2
 #            ^ M indicates mounting via mount-all setting
-Machine2Log |M|sshfs|machine2.long.url:/var/log | /home/me/Machine2log
-
-
+Machine2Log |G|M|sshfs|machine2.long.url:/var/log | /home/me/Machine2log
 
 The fields are:
     Name - the name of this mountpoint, for individual mounting and unmounting
+    Group - the name of the group this mountpoint is in, to allow the mounting
+            and unmounting of specific groups of file systems
     M    - indicates whether this gets mounted on mount-all
     Protocol - right now, only sshfs is supported
     Remote - follows the SSHFS syntax for remote mounts:
             network_address:/remote/file/system/if/any
     Local - where the mount point is on the local file system
+
+
+Usage:
+    mount.pl
+        Mounts all
+    mount.pl -Q
+        Unmounts all
+    mount.pl -g Foo -g Bar
+        Mounts members of groups Foo and Bar
+    mount.pl -d Foo -d Bar
+        Unmounts members of groups Foo and Bar
+    mount.pl -m Blee -m Quuz
+        Mounts systems named Blee and Quuz
+    mount.pl -u Blee -u Quuz
+        Unounts systems named Blee and Quuz
