@@ -13,6 +13,8 @@
 # 2011/11 - DAJ - Added -o workaround=rename to allow GIT over
 # sshfs
 # 2012/02 - DAJ - Added groups for mounting and dismounting
+# 2012/08 - Lev Gorenstein <lev@ledorub.poxod.com> - un-hardcoded
+# configuration file name and location, added '-c config' option.
 
 use 5.010 ;
 use strict ;
@@ -25,6 +27,7 @@ use subs qw( mount unmount ) ;
 
 # Definition
 # mount.pl                   --   mounts all in the config
+# mount.pl -c /alt/conf/ig   --   mounts all in the alternative config
 # mount.pl -Q                -- unmounts all in the config
 # mount.pl -m foo            --   mounts foo, if foo is in config
 # mount.pl -u foo            -- unmounts foo, if foo is in config
@@ -35,6 +38,7 @@ my %local ;
 my @mount ;
 my %mountprog ;
 my %protocol ;
+my $help = 0 ;
 my $groups ;
 my %remote ;
 my @unmount ;
@@ -42,6 +46,7 @@ my $unmount ;
 my $verbose ;
 my @group_mount ;
 my @group_unmount ;
+my $config = "$ENV{'HOME'}/.mount.conf" ;
 
 $mountprog{ sshfs } = '/usr/bin/sshfs' ;
 my $unmountprog = '/bin/fusermount' ;
@@ -53,10 +58,22 @@ GetOptions(
     'dismount=s' => \@group_unmount ,
     'quit'       => \$unmount,
     'verbose'    => \$verbose,
+    'config'     => \$config,
+    'help'       => \$help,
     ) ;
 
+if ( $help ) {
+    mount_help() ;
+    }
+
+say Dumper \@group_mount ;
+say Dumper \@group_unmount ;
+
+exit ;
+
 # don't like the full hardcode
-open my $DATA, '<', '/home/jacoby/.mount.conf' or croak $! ;
+# open my $DATA, '<', '/home/jacoby/.mount.conf' or croak $! ;
+open my $DATA, '<', "$config" or croak $! ;
 while ( <$DATA> ) {
     chomp ;
     my $line = $_ ;
@@ -159,4 +176,9 @@ sub unmount {
     say 'Unmounting ' . $name ;
     say qx( /bin/fusermount -u $local ) ;
     return 1 ;
+    }
+
+sub mount_help {
+    say "INSERT README HERE" ;
+    exit ;
     }
