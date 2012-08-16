@@ -63,7 +63,7 @@ GetOptions(
     'help'       => \$help,
     ) ;
 
-if ( $help ) {
+if ( $help || ! -f $config ) {
     mount_help() ;
     exit ;
     }
