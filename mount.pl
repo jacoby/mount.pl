@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Copyright 2011 Dave Jacoby <http://pm.purdue.org/jacoby/>
+# Copyright 2012 Dave Jacoby <http://pm.purdue.org/jacoby/>
 
 # This program is free software: you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
