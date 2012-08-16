@@ -58,18 +58,14 @@ GetOptions(
     'dismount=s' => \@group_unmount ,
     'quit'       => \$unmount,
     'verbose'    => \$verbose,
-    'config'     => \$config,
+    'config=s'   => \$config,
     'help'       => \$help,
     ) ;
 
 if ( $help ) {
     mount_help() ;
+    exit ;
     }
-
-say Dumper \@group_mount ;
-say Dumper \@group_unmount ;
-
-exit ;
 
 # don't like the full hardcode
 # open my $DATA, '<', '/home/jacoby/.mount.conf' or croak $! ;
@@ -81,16 +77,30 @@ while ( <$DATA> ) {
     my $result = ( split m{\#}mx, $line )[ 0 ] ;
     $line = $result ;
     next if $line !~ m{\w}mx ;
-    my ( $name, $group , $flag, $protocol, $remote, $local ) = split m{\s*\|\s*}mx,
-        $line ;
+    my ( $name, $group , $flag, $protocol, $remote, $local )
+        = split m{\s*\|\s*}mx , $line ;
     $name =~ s{\s}{}g ;
     push @{ $groups->{ $group } } , $name ;
+
     $local{ $name }    = $local ;
     $remote{ $name }   = $remote ;
     $protocol{ $name } = $protocol ;
     $flag{ $name }     = length $flag ;
     }
 close $DATA ;
+
+# instead of trying to deal with groups, put group members into
+# the mount and unmount arrays
+for my $group ( @group_mount ) {
+    for my $machine ( @{ $groups->{ $group } } ) {
+        push @mount , $machine ;
+        }
+    }
+for my $group ( @group_unmount ) {
+    for my $machine ( @{ $groups->{ $group } } ) {
+        push @unmount , $machine ;
+        }
+    }
 
 # UNMOUNT EVERYTHING
 if ( $unmount ) {
@@ -179,6 +189,54 @@ sub unmount {
     }
 
 sub mount_help {
-    say "INSERT README HERE" ;
-    exit ;
+    my $docs ;
+    for my $line ( <DATA> ) {
+        $docs .= $line ;
+        }
+    say $docs ;
     }
+
+#SHOULD REDO THIS AS POD
+
+__DATA__
+
+I created this program to handle via perl the increasingly large number of
+SSHFS-mounted filesystems I was using. This program keeps track of the filesystems,
+both remotely and local mountpoints, but not passwords.
+
+Configuration is held in ~/.mount.conf, which looks like this :
+
+### .mount.conf
+# like many config files, hashes comment out
+
+Machine1    |G|M|sshfs|machine1.long.url:   | /home/me/Machine1
+Machine2    |G| |sshfs|machine2.long.url:   | /home/me/Machine2
+#            ^ M indicates mounting via mount-all setting
+Machine2Log |G|M|sshfs|machine2.long.url:/var/log | /home/me/Machine2log
+
+The fields are:
+    Name - the name of this mountpoint, for individual mounting and unmounting
+    Group - the name of the group this mountpoint is in, to allow the mounting
+            and unmounting of specific groups of file systems
+    M    - indicates whether this gets mounted on mount-all
+    Protocol - right now, only sshfs is supported
+    Remote - follows the SSHFS syntax for remote mounts:
+            network_address:/remote/file/system/if/any
+    Local - where the mount point is on the local file system
+
+
+Usage:
+    mount.pl
+        Mounts all
+    mount.pl -Q
+        Unmounts all
+    mount.pl -g Foo -g Bar
+        Mounts members of groups Foo and Bar
+    mount.pl -d Foo -d Bar
+        Unmounts members of groups Foo and Bar
+    mount.pl -m Blee -m Quuz
+        Mounts systems named Blee and Quuz
+    mount.pl -u Blee -u Quuz
+        Unounts systems named Blee and Quuz
+    mount.pl -c /alt/conf/ig
+        Uses alternate configuration file
