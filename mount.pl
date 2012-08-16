@@ -48,7 +48,7 @@ my $unmount ;
 my $verbose ;
 my @group_mount ;
 my @group_unmount ;
-my $config = "$ENV{'HOME'}/.mount.conf" ;
+my $config = $ENV{'HOME'} . "/.mount.conf" ;
 
 $mountprog{ sshfs } = '/usr/bin/sshfs' ;
 my $unmountprog = '/bin/fusermount' ;
@@ -71,7 +71,7 @@ if ( $help || ! -f $config ) {
 
 # don't like the full hardcode
 # open my $DATA, '<', '/home/jacoby/.mount.conf' or croak $! ;
-open my $DATA, '<', "$config" or croak $! ;
+open my $DATA, '<', $config or croak $! ;
 while ( <$DATA> ) {
     chomp ;
     my $line = $_ ;
