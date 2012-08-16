@@ -15,6 +15,7 @@
 # 2012/02 - DAJ - Added groups for mounting and dismounting
 # 2012/08 - Lev Gorenstein <lev@ledorub.poxod.com> - un-hardcoded
 # configuration file name and location, added '-c config' option.
+# 2012/08 - DAJ - added naive help function. Need to re-do as POD,
 
 use 5.010 ;
 use strict ;
@@ -54,8 +55,8 @@ my $unmountprog = '/bin/fusermount' ;
 GetOptions(
     'mount=s'    => \@mount,
     'unmount=s'  => \@unmount,
-    'group=s'    => \@group_mount ,
-    'dismount=s' => \@group_unmount ,
+    'group=s'    => \@group_mount,
+    'dismount=s' => \@group_unmount,
     'quit'       => \$unmount,
     'verbose'    => \$verbose,
     'config=s'   => \$config,
@@ -77,10 +78,9 @@ while ( <$DATA> ) {
     my $result = ( split m{\#}mx, $line )[ 0 ] ;
     $line = $result ;
     next if $line !~ m{\w}mx ;
-    my ( $name, $group , $flag, $protocol, $remote, $local )
-        = split m{\s*\|\s*}mx , $line ;
+    my ( $name, $group, $flag, $protocol, $remote, $local ) = split m{\s*\|\s*}mx, $line ;
     $name =~ s{\s}{}g ;
-    push @{ $groups->{ $group } } , $name ;
+    push @{ $groups->{ $group } }, $name ;
 
     $local{ $name }    = $local ;
     $remote{ $name }   = $remote ;
@@ -93,12 +93,12 @@ close $DATA ;
 # the mount and unmount arrays
 for my $group ( @group_mount ) {
     for my $machine ( @{ $groups->{ $group } } ) {
-        push @mount , $machine ;
+        push @mount, $machine ;
         }
     }
 for my $group ( @group_unmount ) {
     for my $machine ( @{ $groups->{ $group } } ) {
-        push @unmount , $machine ;
+        push @unmount, $machine ;
         }
     }
 
@@ -110,11 +110,10 @@ if ( $unmount ) {
     }
 
 # MOUNT EVERYTHING
-elsif ( ( $#mount == -1 ) &&
-        ( $#unmount == -1 ) &&
-        ( $#group_mount == -1 ) &&
-        ( $#group_unmount == -1 )
-        ) {
+elsif (( $#mount == -1 )
+    && ( $#unmount == -1 )
+    && ( $#group_mount == -1 )
+    && ( $#group_unmount == -1 ) ) {
     for my $mount ( sort { lc $a cmp lc $b } keys %local ) {
         next unless $flag{ $mount } ;
         mount $mount , $remote{ $mount }, $local{ $mount } ;
