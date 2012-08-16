@@ -16,6 +16,7 @@
 # 2012/08 - Lev Gorenstein <lev@ledorub.poxod.com> - un-hardcoded
 # configuration file name and location, added '-c config' option.
 # 2012/08 - DAJ - added naive help function. Need to re-do as POD,
+# 2012/08 - @petdance - simplified mount_help
 
 use 5.010 ;
 use strict ;
@@ -188,11 +189,7 @@ sub unmount {
     }
 
 sub mount_help {
-    my $docs ;
-    for my $line ( <DATA> ) {
-        $docs .= $line ;
-        }
-    say $docs ;
+    say <DATA> ;
     }
 
 #SHOULD REDO THIS AS POD
