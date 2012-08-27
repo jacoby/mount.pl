@@ -14,15 +14,18 @@
 # sshfs
 # 2012/02 - DAJ - Added groups for mounting and dismounting
 # 2012/08 - Lev Gorenstein <lev@ledorub.poxod.com> - un-hardcoded
-# configuration file name and location, added '-c config' option.
+#                   configuration file name and location,
+#                   added '-c config' option.
 # 2012/08 - DAJ - added naive help function. Need to re-do as POD,
-# 2012/08 - @petdance - simplified mount_help
+# 2012/08 - @petdance - simplified mount_help, other small fixes
+# 2012/08 - DAJ - removed Data::Dumper -- this code ships
+# 2012/08 - DAJ - added mountpoint to "Mounting" annoucement
+#                   per @funnelfiasco
 
 use 5.010 ;
 use strict ;
 use warnings ;
 use Carp ;
-use Data::Dumper ;
 use Getopt::Long ;
 use IO::Interactive qw{ interactive } ;
 use subs qw( mount unmount ) ;
@@ -169,7 +172,7 @@ sub mount {
     $verbose and say { interactive } 'Pass' ;
 
     #should mkdir $local here
-    say 'Mounting ' . $name ;
+    say 'Mounting ' . $name . ' on ' . $local ;
     print qx( /usr/bin/sshfs -o workaround=rename $remote $local ) ;
     return 1 ;
     }
@@ -190,6 +193,7 @@ sub unmount {
 
 sub mount_help {
     say <DATA> ;
+    return ;
     }
 
 #SHOULD REDO THIS AS POD
