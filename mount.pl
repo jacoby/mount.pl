@@ -172,8 +172,14 @@ sub mount {
     $verbose and say { interactive } 'Pass' ;
 
     #should mkdir $local here
-    say 'Mounting ' . $name . ' on ' . $local ;
-    print qx( /usr/bin/sshfs -o workaround=rename $remote $local ) ;
+
+    # Check if there's already something mounted here and skip if there is
+    if ( system("/usr/bin/mountpoint $local") ) {
+        say 'Mounting ' . $name . ' on ' . $local ;
+        print qx( /usr/bin/sshfs -o workaround=rename $remote $local ) ;
+    } else {
+        say 'Skipping ' . $local . ' -- is already an active mount point';
+    }
     return 1 ;
     }
 
